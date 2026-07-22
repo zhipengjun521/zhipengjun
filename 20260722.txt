@@ -72,4 +72,212 @@ sort 排序
 
 今日份学习 系统优化 
 
+ 1 本地clash- 局域网连接 -
+第三步：CentOS 设置代理
 
+假设你的 Windows IP：
+
+192.168.1.50
+
+CentOS：
+
+vim /etc/profile
+
+加入：
+
+export http_proxy=http://192.168.1.50:7897
+export https_proxy=http://192.168.1.50:7897
+export no_proxy="localhost,127.0.0.1"
+
+生效：
+
+source /etc/profile
+
+检查：
+
+echo $http_proxy
+
+应该：
+
+http://192.168.1.50:7897
+第四步测试
+
+CentOS：
+
+curl -I https://github.com
+
+正常：
+
+HTTP/2 200
+测试 ping www.geogle.com
+
+
+明白了，那我前面的判断需要修正：你的手机热点其实是 10.114.138.x 这一条，不是 10.0.0.x。
+
+重新看你的路由表：
+
+0.0.0.0  0.0.0.0  10.0.0.2          10.0.0.1          291
+0.0.0.0  0.0.0.0  192.168.18.1      192.168.18.88     35
+0.0.0.0  0.0.0.0  10.114.138.241    10.114.138.197   35
+
+那么实际应该是：
+
+网络	用途
+192.168.18.x	教师教室局域网（VNC、80网页）
+10.114.138.x	你的手机热点（上网下载）
+10.0.0.x	其他虚拟网络/旧连接（可能是 USB、虚拟适配器等）
+
+现在问题变成：
+
+你的手机热点：
+
+网关：10.114.138.241
+接口：10.114.138.197
+跃点：35
+
+教室局域网：
+
+网关：192.168.18.1
+接口：192.168.18.88
+跃点：35
+
+两者优先级完全一样。
+
+Windows 遇到两个相同 Metric 的默认路由时，会根据接口状态、连接顺序、缓存等选择。
+
+所以可能出现：
+
+有时候下载走手机热点 ✅
+有时候下载走教室网络 ❌
+
+这和你的描述完全吻合：
+
+有时候下载很慢，不确定是不是用了局域网
+C:\Windows\System32>route add 192.168.11.0 mask 255.255.255.0 192.168.18.1
+ 操作完成!   接口跃点数 低一点  电脑默认走低的 
+
+
+# sed -i '7c SELINUX=disabled' /etc/selinux/config
+把第 7 行替换成 SELINUX=disabled 
+
+Linux 在工作中必须保证着两个时间都是正确的
+
+系统时间: 系统显示的时间
+
+硬件时间: BIOS硬件时间
+
+
+
+1.查看系统时间
+
+[root@oldboy ~]# date
+
+2026年 07月 22日 星期三 11:02:23 CST
+
+
+
+2.查看硬件时间
+
+[root@oldboy ~]# clock
+
+2026-07-22 11:02:32.827519+08:00
+
+
+
+#手动修改时间
+
+[root@oldboy ~]# date -s 20081010
+
+2008年 10月 10日 星期五 00:00:00 CST
+
+#时间同步小结
+
+1.查看系统时间
+
+date
+
+
+
+2.系统时间不正确
+
+ntpdate ntp1.aliyun.com
+
+
+
+3.查看硬件时间
+
+clock
+
+
+
+3.系统时间同步给硬件时间
+
+clock -w
+
+
+
+
+
+#笔记 修改时区
+
+[root@oldboy ~]# timedatectl set-timezone Asia/Shanghai
+
+字符串、文字在系统里表现方式。
+
+utf-8: 万国码
+
+GBK: 国标
+
+
+
+#linux系统中字符集使用的是LANG变量
+
+
+
+centos、kylin的字符集的配置文件
+
+[root@oldboy ~]# cat /etc/locale.conf 
+
+LANG="zh_CN.UTF-8"
+
+
+
+
+
+#查看当前系统的语言和字符集
+
+[root@oldboy ~]# echo $LANG
+
+zh_CN.UTF-8  
+
+永久修改
+
+方法1.直接修改文件
+
+[root@oldboy ~]# vim /etc/locale.conf
+
+生效的方法:
+
+1)重启系统
+
+reboot
+
+2)source /etc/locale.conf
+
+#source意义就是将配置文件中的命令拿到命令行中执行了一次。
+
+
+
+
+
+方法2.使用命令修改语言
+
+[root@oldboy ~]# localectl set-locale LANG="zh_CN.UTF-8"
+
+完成后重新连接，或者source生效
+
+1.centos默认的修改为国内的和安装扩展的仓库epel
+
+2.kylin默认的仓库不需要修改、需要安装扩展的epel
+
+3.ubt需要修改默认的仓库为阿里云，不需要安装epel
