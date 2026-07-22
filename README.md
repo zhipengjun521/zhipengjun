@@ -1,2 +1,2 @@
 # zhipengjun
-My Study Recording.
+My Study Recording. git ＋ linux
